@@ -9,3 +9,4 @@
 /vc140.idb
 /vc140.pdb
 *.Build.CppClean.log
+*.obj

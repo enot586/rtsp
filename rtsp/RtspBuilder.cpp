@@ -43,13 +43,12 @@ std::string RtspBuilder::Options(const std::string& user_pass)
 std::string RtspBuilder::Describe(const std::string& user_pass)
 {
 	std::string request = "DESCRIBE " + rtspUrl + " " + rtspVersion + "\r\n" +
-		"CSeq:" + std::to_string(cseq++) + "\r\n";
-
-	request += "Authorization: Basic " + base64_encode(user_pass.c_str(), user_pass.length()) + "\r\n";
-
-	request += "User-agent: " + userAppName + "\r\n" +
+		"CSeq:" + std::to_string(cseq++) + "\r\n" +
+		"Authorization: Basic " + base64_encode( user_pass.c_str(), user_pass.length() ) + "\r\n" +
+		"User-agent: " + userAppName + "\r\n" +
+		"Accept: application / sdp\r\n" +
 		"\r\n";
-	request += "Accept: application / sdp\r\n";
+
 	return request;
 }
 

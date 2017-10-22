@@ -9,22 +9,30 @@ std::vector<char> response_buffer(512);
 
 void receive_until(boost::asio::ip::tcp::socket& s, std::vector<char>& tp, std::vector<char>& responseBuffer)
 {
-	uint32_t receivedBytes = 0;
 	bool endOfPacket = false;
+	int receivedBytes = 0;
+	uint32_t totalBytes = 0;
 
 	do {
-		receivedBytes += s.read_some( boost::asio::buffer(responseBuffer) );
-		
-		if ( receivedBytes >= tp.size() ) {
-			std::vector<char>::iterator it =
-				std::search( (responseBuffer.begin()+ receivedBytes) - tp.size(), responseBuffer.end(),
-					tp.begin(), tp.end());
+		char currentByte[1];
 
-			endOfPacket = it != responseBuffer.end();
-		}
-		else
-		{
-			endOfPacket = false;
+		receivedBytes = s.read_some( boost::asio::buffer(currentByte) );
+		
+		if (receivedBytes) {
+			responseBuffer.at(totalBytes) = currentByte[0];
+
+			++totalBytes;
+
+			if (totalBytes >= tp.size()) {
+				std::vector<char>::iterator itEndPacket = (responseBuffer.begin() + totalBytes);
+				std::vector<char>::iterator it =
+					std::search(itEndPacket - tp.size(), itEndPacket, tp.begin(), tp.end());
+
+				endOfPacket = (it != itEndPacket);
+			}
+			else {
+				endOfPacket = false;
+			}
 		}
 	} while (!endOfPacket);
 
@@ -87,6 +95,8 @@ int main()
 			return (-1);
 		}
 
+		std::fill(response_buffer.begin(), response_buffer.end(), 0);
+
 		std::cout << "receive \t\t";
 		try {
 			std::vector<char> tp(4);
@@ -119,6 +129,8 @@ int main()
 			std::cout << "[FAIL]" << std::endl;
 			return (-1);
 		}
+
+		std::fill(response_buffer.begin(), response_buffer.end(), 0);
 
 		std::cout << "receive \t\t";
 		try {
