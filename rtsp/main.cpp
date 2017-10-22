@@ -39,6 +39,27 @@ void receive_until(boost::asio::ip::tcp::socket& s, std::vector<char>& tp, std::
 	std::cout << "response complete" << std::endl;
 }
 
+void receive_header(boost::asio::ip::tcp::socket& s, std::vector<char>& responseBuffer)
+{
+	std::fill(response_buffer.begin(), response_buffer.end(), 0);
+
+	std::cout << "receive \t\t";
+	try {
+		std::vector<char> tp(4);
+		tp[0] = '\r';
+		tp[1] = '\n';
+		tp[2] = '\r';
+		tp[3] = '\n';
+
+		receive_until(s, tp, response_buffer);
+		std::cout << "[OK]" << std::endl;
+	}
+	catch (boost::system::system_error e) {
+		std::cout << "[FAIL]" << std::endl;
+		throw e;
+	}
+}
+
 int main()
 {
 	std::string camIp = "192.168.0.102";
@@ -67,21 +88,7 @@ int main()
 		return (-1);
 	}
 
-	std::cout << "receive \t\t";
-	try {
-		std::vector<char> tp(4);
-		tp[0] = '\r';
-		tp[1] = '\n';
-		tp[2] = '\r';
-		tp[3] = '\n';
-
-		receive_until(sock, tp, response_buffer);
-		std::cout << "[OK]" << std::endl;
-	}
-	catch (boost::system::system_error e) {
-		std::cout << "[FAIL]" << std::endl;
-		return (-1);
-	}
+	receive_header(sock, response_buffer);
 
 	if ( 401 == rtsp.ParseResponse(response_buffer) ) {
 
@@ -89,32 +96,16 @@ int main()
 		try {
 			sock.write_some(boost::asio::buffer( rtsp.Options( std::string("admin:admin") ) ) );
 			std::cout << "[OK]" << std::endl;
+
+			receive_header(sock, response_buffer);
+
+			if (200 != rtsp.ParseResponse(response_buffer)) {
+				std::cout << "error: unavailable connection " << std::endl;
+				return (-1);
+			}
 		}
 		catch (boost::system::system_error e) {
 			std::cout << "[FAIL]" << std::endl;
-			return (-1);
-		}
-
-		std::fill(response_buffer.begin(), response_buffer.end(), 0);
-
-		std::cout << "receive \t\t";
-		try {
-			std::vector<char> tp(4);
-			tp[0] = '\r';
-			tp[1] = '\n';
-			tp[2] = '\r';
-			tp[3] = '\n';
-
-			receive_until(sock, tp, response_buffer);
-			std::cout << "[OK]" << std::endl;
-		}
-		catch (boost::system::system_error e) {
-			std::cout << "[FAIL]" << std::endl;
-			return (-1);
-		}
-
-		if ( 200 != rtsp.ParseResponse(response_buffer) )		{
-			std::cout << "error: unavailable connection " << std::endl;
 			return (-1);
 		}
 
@@ -124,36 +115,18 @@ int main()
 		try {
 			sock.write_some(boost::asio::buffer(rtsp.Describe(std::string("admin:admin"))));
 			std::cout << "[OK]" << std::endl;
+
+			receive_header(sock, response_buffer);
+
+			if (200 != rtsp.ParseResponse(response_buffer)) {
+				std::cout << "error: unavailable connection " << std::endl;
+				return (-1);
+			}
 		}
 		catch (boost::system::system_error e) {
 			std::cout << "[FAIL]" << std::endl;
 			return (-1);
 		}
-
-		std::fill(response_buffer.begin(), response_buffer.end(), 0);
-
-		std::cout << "receive \t\t";
-		try {
-			std::vector<char> tp(4);
-			tp[0] = '\r';
-			tp[1] = '\n';
-			tp[2] = '\r';
-			tp[3] = '\n';
-
-			receive_until(sock, tp, response_buffer);
-			std::cout << "[OK]" << std::endl;
-		}
-		catch (boost::system::system_error e) {
-			std::cout << "[FAIL]" << std::endl;
-			return (-1);
-		}
-
-		if (200 != rtsp.ParseResponse(response_buffer)) {
-			std::cout << "error: unavailable connection " << std::endl;
-			return (-1);
-		}
-		
-
 	}
 
 	std::cout << "The end" << std::endl;
