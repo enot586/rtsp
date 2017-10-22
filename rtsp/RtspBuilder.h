@@ -21,6 +21,8 @@ public:
 	std::string Options();
 	std::string Options(const std::string& user_pass);
 
+	std::string Describe(const std::string& user_pass);
+
 	int ParseResponse(const std::vector<char>& buffer);
 
 };

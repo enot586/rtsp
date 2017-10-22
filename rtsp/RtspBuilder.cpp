@@ -19,25 +19,38 @@ RtspBuilder::~RtspBuilder()
 
 std::string RtspBuilder::Options()
 {
-	std::string rtspOPTIONS = "OPTIONS " + rtspUrl + " " + rtspVersion + "\r\n" +
+	std::string request = "OPTIONS " + rtspUrl + " " + rtspVersion + "\r\n" +
 		"CSeq:" + std::to_string(cseq++) + "\r\n" + 
 		"User-agent: " + userAppName + "\r\n" +
 		"\r\n";
 
-	return rtspOPTIONS;
+	return request;
 }
 
 std::string RtspBuilder::Options(const std::string& user_pass)
 {
-	std::string rtspOPTIONS = "OPTIONS " + rtspUrl + " " + rtspVersion + "\r\n" +
+	std::string request = "OPTIONS " + rtspUrl + " " + rtspVersion + "\r\n" +
 		"CSeq:" + std::to_string(cseq++) + "\r\n";
 
-	rtspOPTIONS+= "Authorization: Basic " + base64_encode( user_pass.c_str(), user_pass.length() ) + "\r\n";
+	request+= "Authorization: Basic " + base64_encode( user_pass.c_str(), user_pass.length() ) + "\r\n";
 
-	rtspOPTIONS += "User-agent: "+ userAppName + "\r\n" +
+	request += "User-agent: "+ userAppName + "\r\n" +
 					"\r\n";
 
-	return rtspOPTIONS;
+	return request;
+}
+
+std::string RtspBuilder::Describe(const std::string& user_pass)
+{
+	std::string request = "DESCRIBE " + rtspUrl + " " + rtspVersion + "\r\n" +
+		"CSeq:" + std::to_string(cseq++) + "\r\n";
+
+	request += "Authorization: Basic " + base64_encode(user_pass.c_str(), user_pass.length()) + "\r\n";
+
+	request += "User-agent: " + userAppName + "\r\n" +
+		"\r\n";
+	request += "Accept: application / sdp\r\n";
+	return request;
 }
 
 int RtspBuilder::ParseResponse(const std::vector<char>& buffer)

@@ -103,13 +103,48 @@ int main()
 			return (-1);
 		}
 
-		if ( 200 == rtsp.ParseResponse(response_buffer) )		{
-			std::cout << "sucessfull rtsp connection" << std::endl;
+		if ( 200 != rtsp.ParseResponse(response_buffer) )		{
+			std::cout << "error: unavailable connection " << std::endl;
+			return (-1);
 		}
+
+		std::cout << "sucessfull rtsp connection" << std::endl;
+
+		std::cout << "send DESCRIBE with auth \t\t";
+		try {
+			sock.write_some(boost::asio::buffer(rtsp.Describe(std::string("admin:admin"))));
+			std::cout << "[OK]" << std::endl;
+		}
+		catch (boost::system::system_error e) {
+			std::cout << "[FAIL]" << std::endl;
+			return (-1);
+		}
+
+		std::cout << "receive \t\t";
+		try {
+			std::vector<char> tp(4);
+			tp[0] = '\r';
+			tp[1] = '\n';
+			tp[2] = '\r';
+			tp[3] = '\n';
+
+			receive_until(sock, tp, response_buffer);
+			std::cout << "[OK]" << std::endl;
+		}
+		catch (boost::system::system_error e) {
+			std::cout << "[FAIL]" << std::endl;
+			return (-1);
+		}
+
+		if (200 != rtsp.ParseResponse(response_buffer)) {
+			std::cout << "error: unavailable connection " << std::endl;
+			return (-1);
+		}
+		
 
 	}
 
-	std::cout << "terminated" << std::endl;
+	std::cout << "The end" << std::endl;
 	std::cin;
     return 0;
 }
