@@ -3,11 +3,10 @@
 #include <iostream>
 #include <vector>
 #include <boost\asio.hpp>
+#include "RtspHeader.h"
 #include "RtspBuilder.h"
 
-std::vector<char> response_buffer(512);
-
-void receive_until(boost::asio::ip::tcp::socket& s, std::vector<char>& tp, std::vector<char>& responseBuffer)
+uint32_t receive_until(boost::asio::ip::tcp::socket& s, std::vector<char>& tp, std::vector<char>& responseBuffer)
 {
 	bool endOfPacket = false;
 	int receivedBytes = 0;
@@ -37,11 +36,15 @@ void receive_until(boost::asio::ip::tcp::socket& s, std::vector<char>& tp, std::
 	} while (!endOfPacket);
 
 	std::cout << "response complete" << std::endl;
+
+	return totalBytes;
 }
 
-void receive_header(boost::asio::ip::tcp::socket& s, std::vector<char>& responseBuffer)
+RtspHeader receive_header(boost::asio::ip::tcp::socket& s)
 {
-	std::fill(response_buffer.begin(), response_buffer.end(), 0);
+	std::vector<char> responseBuffer(512);
+
+	std::fill(responseBuffer.begin(), responseBuffer.end(), 0);
 
 	std::cout << "receive \t\t";
 	try {
@@ -51,13 +54,19 @@ void receive_header(boost::asio::ip::tcp::socket& s, std::vector<char>& response
 		tp[2] = '\r';
 		tp[3] = '\n';
 
-		receive_until(s, tp, response_buffer);
+		uint32_t receiveBytes = receive_until(s, tp, responseBuffer);
+
+		if ( receiveBytes < responseBuffer.size() )
+			responseBuffer.erase(responseBuffer.begin() + receiveBytes, responseBuffer.end() );
+
 		std::cout << "[OK]" << std::endl;
 	}
 	catch (boost::system::system_error e) {
 		std::cout << "[FAIL]" << std::endl;
 		throw e;
 	}
+
+	return RtspHeader(responseBuffer);
 }
 
 int main()
@@ -88,18 +97,18 @@ int main()
 		return (-1);
 	}
 
-	receive_header(sock, response_buffer);
+	RtspHeader header = receive_header(sock);
 
-	if ( 401 == rtsp.ParseResponse(response_buffer) ) {
+	if ( 401 == header.GetCode() ) {
 
 		std::cout << "send OPTIONS with auth \t\t";
 		try {
 			sock.write_some(boost::asio::buffer( rtsp.Options( std::string("admin:admin") ) ) );
 			std::cout << "[OK]" << std::endl;
 
-			receive_header(sock, response_buffer);
+			header = receive_header(sock);
 
-			if (200 != rtsp.ParseResponse(response_buffer)) {
+			if ( 200 != header.GetCode() ) {
 				std::cout << "error: unavailable connection " << std::endl;
 				return (-1);
 			}
@@ -109,19 +118,27 @@ int main()
 			return (-1);
 		}
 
-		std::cout << "sucessfull rtsp connection" << std::endl;
-
 		std::cout << "send DESCRIBE with auth \t\t";
 		try {
-			sock.write_some(boost::asio::buffer(rtsp.Describe(std::string("admin:admin"))));
+			sock.write_some( boost::asio::buffer( rtsp.Describe( std::string("admin:admin") ) ) );
 			std::cout << "[OK]" << std::endl;
 
-			receive_header(sock, response_buffer);
+			header = receive_header(sock);
 
-			if (200 != rtsp.ParseResponse(response_buffer)) {
+			if ( 200 != header.GetCode() ) {
 				std::cout << "error: unavailable connection " << std::endl;
 				return (-1);
 			}
+
+			std::vector<char> body( header.GetContentLength() );
+
+			size_t received_bytes = 0;
+			while ( received_bytes < body.size() ) {
+				received_bytes+= sock.read_some( boost::asio::buffer(body) );
+			}
+			
+
+
 		}
 		catch (boost::system::system_error e) {
 			std::cout << "[FAIL]" << std::endl;
