@@ -18,6 +18,7 @@ public:
 	std::string GetDate();
 	std::string GetTransport();
 	std::pair<uint16_t, uint16_t> GetTransportServerPorts();
+	std::string GetSessionId();
 
 private:
 	uint32_t	GetParamValue(std::string& paramName);

@@ -167,6 +167,7 @@ int main()
 
 		std::pair<uint16_t, uint16_t> cp(55780, 55781);
 		std::pair<uint16_t, uint16_t> sp(0, 0);
+		std::string sessionId;
 
 		std::cout << "send SETUP with auth \t\t";
 		try {
@@ -182,12 +183,36 @@ int main()
 			}
 
 			sp = header.GetTransportServerPorts();
-
-
+			sessionId = header.GetSessionId();
 		} catch (boost::system::system_error e) {
 			std::cout << "[FAIL]" << std::endl;
 			return (-1);
 		}
+
+		/**
+		* @fixme: open RTP & RTCP sockets
+		*/
+
+		std::cout << "send PLAY with auth \t\t";
+		try {
+			sock.write_some( boost::asio::buffer( rtsp.Play( std::string("admin:admin"), sessionId ) ) );
+			std::cout << "[OK]" << std::endl;
+
+			header = receive_header(sock);
+
+			if ( 200 != header.GetCode() ) {
+				std::cout << "error: unavailable connection " << std::endl;
+				return (-1);
+			}
+		}
+		catch (boost::system::system_error e) {
+			std::cout << "[FAIL]" << std::endl;
+			return (-1);
+		}
+
+		/**
+		* @fixme: have to receiving JPEG through RTP
+		*/
 	}
 
 	std::cout << "The end" << std::endl;

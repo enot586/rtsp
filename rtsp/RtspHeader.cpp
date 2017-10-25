@@ -108,12 +108,9 @@ std::pair<uint16_t, uint16_t> RtspHeader::GetTransportServerPorts()
 	std::string second;
 	std::string param = "server_port=";
 	std::string ts = GetTransport();
-
 	std::string::iterator it = std::search( ts.begin(), ts.end(), param.begin(), param.end() );
 
 	if ( it != ts.end() ) {
-
-
 		while (*it != '-') {
 			first += *it++;
 		}
@@ -124,4 +121,17 @@ std::pair<uint16_t, uint16_t> RtspHeader::GetTransportServerPorts()
 	}
 
 	return std::pair<uint16_t, uint16_t>( stoi(first), stoi(second) );
+}
+
+std::string RtspHeader::GetSessionId()
+{
+	std::string session = GetParamSring( std::string("Session") );
+	std::string result;
+
+	std::string::iterator it = session.begin();
+	while ( (*it != ';') && (it != session.end()) && (*it != '\r') && (*it != '\n') ) {
+		result += *it++;
+	}
+
+	return result;
 }

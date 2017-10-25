@@ -64,6 +64,19 @@ std::string RtspBuilder::Setup(const std::string& user_pass, const std::string& 
 	return request;
 }
 
+std::string RtspBuilder::Play(const std::string& user_pass, std::string& sessionId)
+{
+	std::string request = "PLAY " + rtspUrl + " " +  rtspVersion + "\r\n" +
+		"CSeq:" + std::to_string(cseq++) + "\r\n" +
+		"Authorization: Basic " + base64_encode( user_pass.c_str(), user_pass.length() ) + "\r\n" +
+		"User-agent: " + userAppName + "\r\n" +
+		"Session: " + sessionId + "\r\n" +
+		"Range: npt=0.000-" + "\r\n" +
+		"\r\n";
+
+	return request;
+}
+
 int RtspBuilder::ParseResponse(const std::vector<char>& buffer)
 {
 	if (buffer.size() >= rtspVersion.length() + 4) {
