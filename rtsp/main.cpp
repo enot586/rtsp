@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include <string>
+#include <algorithm>  
 #include <iostream>
 #include <vector>
 #include <boost\asio.hpp>
@@ -69,6 +70,24 @@ RtspHeader receive_header(boost::asio::ip::tcp::socket& s)
 	return RtspHeader(responseBuffer);
 }
 
+std::string get_sdp_attribute_value(std::string attr, std::vector<char>& source)
+{
+	std::string fullAttr = "a="+attr+":";
+	std::string result;
+	std::vector<char>::iterator it = std::search( source.begin(), source.end(), fullAttr.begin(), fullAttr.end() );
+
+	if ( it != source.end() ) {
+		it += fullAttr.length();
+
+		while ( (it != source.end()) && (*it != '\r') && (*it != '\n') ) {
+			result += *it;
+			++it;
+		}
+	}
+
+	return result;
+}
+
 int main()
 {
 	std::string camIp = "192.168.0.102";
@@ -118,6 +137,8 @@ int main()
 			return (-1);
 		}
 
+		std::string addr;
+
 		std::cout << "send DESCRIBE with auth \t\t";
 		try {
 			sock.write_some( boost::asio::buffer( rtsp.Describe( std::string("admin:admin") ) ) );
@@ -130,17 +151,40 @@ int main()
 				return (-1);
 			}
 
-			std::vector<char> body( header.GetContentLength() );
-
+			//receive sdp payload
+			std::vector<char> sdp_description( header.GetContentLength() );
 			size_t received_bytes = 0;
-			while ( received_bytes < body.size() ) {
-				received_bytes+= sock.read_some( boost::asio::buffer(body) );
+			while ( received_bytes < sdp_description.size() ) {
+				received_bytes+= sock.read_some( boost::asio::buffer(sdp_description) );
 			}
 			
-
-
+			addr = get_sdp_attribute_value("control", sdp_description);
 		}
 		catch (boost::system::system_error e) {
+			std::cout << "[FAIL]" << std::endl;
+			return (-1);
+		}
+
+		std::pair<uint16_t, uint16_t> cp(55780, 55781);
+		std::pair<uint16_t, uint16_t> sp(0, 0);
+
+		std::cout << "send SETUP with auth \t\t";
+		try {
+			
+			sock.write_some( boost::asio::buffer( rtsp.Setup( std::string("admin:admin"), addr, cp.first, cp.second ) ) );
+			std::cout << "[OK]" << std::endl;
+
+			header = receive_header(sock);
+
+			if ( 200 != header.GetCode() ) {
+				std::cout << "error: unavailable connection " << std::endl;
+				return (-1);
+			}
+
+			sp = header.GetTransportServerPorts();
+
+
+		} catch (boost::system::system_error e) {
 			std::cout << "[FAIL]" << std::endl;
 			return (-1);
 		}

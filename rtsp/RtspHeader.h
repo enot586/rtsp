@@ -16,6 +16,8 @@ public:
 	std::string GetContentType();
 	uint32_t GetCseq();
 	std::string GetDate();
+	std::string GetTransport();
+	std::pair<uint16_t, uint16_t> GetTransportServerPorts();
 
 private:
 	uint32_t	GetParamValue(std::string& paramName);

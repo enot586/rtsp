@@ -96,3 +96,32 @@ std::string RtspHeader::GetDate()
 {
 	return GetParamSring( std::string("Date") );
 }
+
+std::string RtspHeader::GetTransport()
+{
+	return GetParamSring( std::string("Transport") );
+}
+
+std::pair<uint16_t, uint16_t> RtspHeader::GetTransportServerPorts()
+{
+	std::string first;
+	std::string second;
+	std::string param = "server_port=";
+	std::string ts = GetTransport();
+
+	std::string::iterator it = std::search( ts.begin(), ts.end(), param.begin(), param.end() );
+
+	if ( it != ts.end() ) {
+
+
+		while (*it != '-') {
+			first += *it++;
+		}
+
+		while ( (it != ts.end()) && (*it != '\r') && (*it != '\n') ) {
+			second += *it++;
+		}
+	}
+
+	return std::pair<uint16_t, uint16_t>( stoi(first), stoi(second) );
+}

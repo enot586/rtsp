@@ -46,7 +46,19 @@ std::string RtspBuilder::Describe(const std::string& user_pass)
 		"CSeq:" + std::to_string(cseq++) + "\r\n" +
 		"Authorization: Basic " + base64_encode( user_pass.c_str(), user_pass.length() ) + "\r\n" +
 		"User-agent: " + userAppName + "\r\n" +
-		"Accept: application / sdp\r\n" +
+		"Accept: application/sdp\r\n" +
+		"\r\n";
+
+	return request;
+}
+
+std::string RtspBuilder::Setup(const std::string& user_pass, const std::string& threadName, uint16_t rtpPort, uint16_t rtcpPort)
+{
+	std::string request = "SETUP " + rtspUrl + "/" + threadName + rtspVersion + "\r\n" +
+		"CSeq:" + std::to_string(cseq++) + "\r\n" +
+		"Authorization: Basic " + base64_encode(user_pass.c_str(), user_pass.length()) + "\r\n" +
+		"User-agent: " + userAppName + "\r\n" +
+		"Transport: RTP/AVP;unicast;client_port=" + std::to_string(rtpPort) + "-" + std::to_string(rtcpPort) + "\r\n" +
 		"\r\n";
 
 	return request;
