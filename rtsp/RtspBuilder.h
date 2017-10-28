@@ -25,6 +25,7 @@ public:
 	std::string Setup(const std::string& user_pass, const std::string& threadName, uint16_t rtpPort, uint16_t rtcpPort);
 
 	std::string Play(const std::string& user_pass, std::string& sessionId);
+	std::string Teardown(const std::string& user_pass, std::string& sessionId);
 
 	int ParseResponse(const std::vector<char>& buffer);
 

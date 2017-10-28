@@ -54,7 +54,7 @@ std::string RtspBuilder::Describe(const std::string& user_pass)
 
 std::string RtspBuilder::Setup(const std::string& user_pass, const std::string& threadName, uint16_t rtpPort, uint16_t rtcpPort)
 {
-	std::string request = "SETUP " + rtspUrl + "/" + threadName + rtspVersion + "\r\n" +
+	std::string request = "SETUP " + rtspUrl + "/" + threadName + " " + rtspVersion + "\r\n" +
 		"CSeq:" + std::to_string(cseq++) + "\r\n" +
 		"Authorization: Basic " + base64_encode(user_pass.c_str(), user_pass.length()) + "\r\n" +
 		"User-agent: " + userAppName + "\r\n" +
@@ -72,6 +72,17 @@ std::string RtspBuilder::Play(const std::string& user_pass, std::string& session
 		"User-agent: " + userAppName + "\r\n" +
 		"Session: " + sessionId + "\r\n" +
 		"Range: npt=0.000-" + "\r\n" +
+		"\r\n";
+
+	return request;
+}
+
+std::string RtspBuilder::Teardown(const std::string& user_pass, std::string& sessionId)
+{
+	std::string request = "TEARDOWN " + rtspUrl + " " + rtspVersion + "\r\n" +
+		"CSeq:" + std::to_string(cseq++) + "\r\n" +
+		"Authorization: Basic " + base64_encode(user_pass.c_str(), user_pass.length()) + "\r\n" +
+		"Session: " + sessionId + "\r\n" +
 		"\r\n";
 
 	return request;

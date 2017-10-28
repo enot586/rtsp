@@ -111,9 +111,12 @@ std::pair<uint16_t, uint16_t> RtspHeader::GetTransportServerPorts()
 	std::string::iterator it = std::search( ts.begin(), ts.end(), param.begin(), param.end() );
 
 	if ( it != ts.end() ) {
+		it += param.length();
 		while (*it != '-') {
 			first += *it++;
 		}
+
+		++it;
 
 		while ( (it != ts.end()) && (*it != '\r') && (*it != '\n') ) {
 			second += *it++;

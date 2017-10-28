@@ -79,7 +79,7 @@ std::string get_sdp_attribute_value(std::string attr, std::vector<char>& source)
 	if ( it != source.end() ) {
 		it += fullAttr.length();
 
-		while ( (it != source.end()) && (*it != '\r') && (*it != '\n') ) {
+		while ( (it != source.end() ) && (*it != '\r') && (*it != '\n') ) {
 			result += *it;
 			++it;
 		}
@@ -128,7 +128,7 @@ int main()
 			header = receive_header(sock);
 
 			if ( 200 != header.GetCode() ) {
-				std::cout << "error: unavailable connection " << std::endl;
+				std::cout << "error: " << std::to_string( header.GetCode() ) << std::endl;
 				return (-1);
 			}
 		}
@@ -147,7 +147,7 @@ int main()
 			header = receive_header(sock);
 
 			if ( 200 != header.GetCode() ) {
-				std::cout << "error: unavailable connection " << std::endl;
+				std::cout << "error: " << std::to_string( header.GetCode() ) << std::endl;
 				return (-1);
 			}
 
@@ -178,7 +178,7 @@ int main()
 			header = receive_header(sock);
 
 			if ( 200 != header.GetCode() ) {
-				std::cout << "error: unavailable connection " << std::endl;
+				std::cout << "error: " << std::to_string( header.GetCode() ) << std::endl;
 				return (-1);
 			}
 
@@ -189,9 +189,17 @@ int main()
 			return (-1);
 		}
 
-		/**
-		* @fixme: open RTP & RTCP sockets
-		*/
+		boost::asio::ip::udp::endpoint rtp_ep(boost::asio::ip::address::from_string( "127.0.0.1" ), cp.first);
+		boost::asio::ip::udp::socket rtp_sock(service);
+
+		boost::asio::ip::udp::endpoint rtcp_ep(boost::asio::ip::address::from_string("127.0.0.1"), cp.second);
+		boost::asio::ip::udp::socket rtcp_sock(service);
+
+		rtp_sock.open( boost::asio::ip::udp::v4() );
+		rtp_sock.bind(rtp_ep);
+
+		rtcp_sock.open( boost::asio::ip::udp::v4() );
+		rtcp_sock.bind(rtcp_ep);
 
 		std::cout << "send PLAY with auth \t\t";
 		try {
@@ -201,7 +209,7 @@ int main()
 			header = receive_header(sock);
 
 			if ( 200 != header.GetCode() ) {
-				std::cout << "error: unavailable connection " << std::endl;
+				std::cout << "error: " << std::to_string( header.GetCode() ) << std::endl;
 				return (-1);
 			}
 		}
@@ -210,13 +218,29 @@ int main()
 			return (-1);
 		}
 
+
+		std::cout << "send TEARDOWN with auth \t\t";
+		try {
+			sock.write_some( boost::asio::buffer( rtsp.Teardown(std::string("admin:admin"), sessionId ) ) );
+			header = receive_header(sock);
+
+			if (200 != header.GetCode() ) {
+				std::cout << "error: " << std::to_string( header.GetCode() ) << std::endl;
+				return (-1);
+			}
+		}
+		catch (boost::system::system_error e) {
+			std::cout << "[FAIL]" << std::endl;
+			return (-1);
+		}
 		/**
 		* @fixme: have to receiving JPEG through RTP
 		*/
 	}
 
 	std::cout << "The end" << std::endl;
-	std::cin;
+	int a;
+	std::cin >> a;
     return 0;
 }
 
