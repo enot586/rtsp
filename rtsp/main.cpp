@@ -28,10 +28,12 @@ int main()
 
 		rtsp.Play();
 
-		rtp.ReceivePacket(rtp_s);
+		rtsp.Teardown();
+
+		rtp.ReceiveFrame(rtp_s);
 		//receving rtp jpeg
 
-		rtsp.Teardown();
+		
 	}
 	catch (std::exception e) {
 		return (-1);
