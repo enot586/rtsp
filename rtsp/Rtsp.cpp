@@ -39,8 +39,6 @@ uint32_t Rtsp::ReceiveUntil(boost::asio::ip::tcp::socket& s, std::vector<char>& 
 		}
 	} while (!endOfPacket);
 
-	std::cout << "response complete" << std::endl;
-
 	return totalBytes;
 }
 

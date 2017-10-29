@@ -1,7 +1,4 @@
 #pragma once
-/*
-* rtp.h  --  RTP header file
-*/
 #include "stdafx.h"
 
 /*
@@ -11,15 +8,18 @@
 #define RTP_SEQ_MOD (1<<16) 
 #define RTP_MAX_SDES 255      /* maximum text length for SDES */ 
 
-typedef enum {
+/* The following definition is from RFC1890 */
+#define RTP_HDR_SZ 12 
+
+enum rtcp_type_t  {
 	RTCP_SR = 200,
 	RTCP_RR = 201,
 	RTCP_SDES = 202,
 	RTCP_BYE = 203,
 	RTCP_APP = 204
-} rtcp_type_t;
+};
 
-typedef enum {
+enum rtcp_sdes_type_t {
 	RTCP_SDES_END = 0,
 	RTCP_SDES_CNAME = 1,
 	RTCP_SDES_NAME = 2,
@@ -29,12 +29,12 @@ typedef enum {
 	RTCP_SDES_TOOL = 6,
 	RTCP_SDES_NOTE = 7,
 	RTCP_SDES_PRIV = 8
-} rtcp_sdes_type_t;
+};
 
 /*
 * RTP data header
 */
-typedef struct {
+struct rtp_hdr_t {
 	unsigned int version : 2;   /* protocol version */
 	unsigned int p : 1;         /* padding flag */
 	unsigned int x : 1;         /* header extension flag */
@@ -44,19 +44,19 @@ typedef struct {
 	unsigned int seq : 16;      /* sequence number */
 	uint32_t ts;               /* timestamp */
 	uint32_t ssrc;             /* synchronization source */
-	uint32_t csrc[1];          /* optional CSRC list */
-} rtp_hdr_t;
+	//uint32_t csrc[1];          /* optional CSRC list */
+};
 
 /*
 * RTCP common header word
 */
-typedef struct {
+struct rtcp_common_t {
 	unsigned int version : 2;   /* protocol version */
 	unsigned int p : 1;         /* padding flag */
 	unsigned int count : 5;     /* varies by packet type */
 	unsigned int pt : 8;        /* RTCP packet type */
 	uint16_t length;           /* pkt len in words, w/o this word */
-} rtcp_common_t;
+};
 
 /*
 * Big-endian mask for version, padding bit and packet type pair
@@ -67,7 +67,7 @@ typedef struct {
 /*
 * Reception report block
 */
-typedef struct {
+struct rtcp_rr_t  {
 	uint32_t ssrc;             /* data source being reported */
 	unsigned int fraction : 8;  /* fraction lost since last SR/RR */
 	int lost : 24;              /* cumul. no. pkts lost (signed!) */
@@ -75,21 +75,21 @@ typedef struct {
 	uint32_t jitter;           /* interarrival jitter */
 	uint32_t lsr;              /* last SR packet from this source */
 	uint32_t dlsr;             /* delay since last SR packet */
-} rtcp_rr_t;
+};
 
 /*
 * SDES item
 */
-typedef struct {
+struct rtcp_sdes_item_t  {
 	uint8_t type;              /* type of item (rtcp_sdes_type_t) */
 	uint8_t length;            /* length of item (in octets) */
 	char data[1];             /* text, not null-terminated */
-} rtcp_sdes_item_t;
+};
 
 /*
 * One RTCP packet
 */
-typedef struct {
+struct rtcp_t  {
 	rtcp_common_t common;     /* common header */
 
 	union {
@@ -123,14 +123,12 @@ typedef struct {
 		} bye;
 
 	} r;
-} rtcp_t;
-
-typedef struct rtcp_sdes rtcp_sdes_t;
+};
 
 /*
 * Per-source state information
 */
-typedef struct {
+struct source  {
 	uint16_t max_seq;        /* highest seq. number seen */
 	uint32_t cycles;         /* shifted count of seq. number cycles */
 	uint32_t base_seq;       /* base seq number */
@@ -142,4 +140,5 @@ typedef struct {
 	uint32_t transit;        /* relative trans time for prev pkt */
 	uint32_t jitter;         /* estimated jitter */
 							/* ... */
-} source;
+};
+

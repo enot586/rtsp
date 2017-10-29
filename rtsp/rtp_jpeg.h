@@ -2,9 +2,6 @@
 #include "stdafx.h"
 #include "rtp.h"
 
-/* The following definition is from RFC1890 */
-#define RTP_HDR_SZ 12 
-
 #define RTP_PT_JPEG             26 
 
 #define RTP_JPEG_RESTART           0x40 

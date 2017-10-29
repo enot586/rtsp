@@ -14,8 +14,8 @@ class Rtsp
 {
 	boost::asio::ip::tcp::socket& sock;
 
-	const uint16_t RTP_PORT_DEFAULT = 55780;
-	const uint16_t RTCP_PORT_DEFAULT = 55781;
+	static const uint16_t RTP_PORT_DEFAULT = 55780;
+	static const uint16_t RTCP_PORT_DEFAULT = 55781;
 
 	std::pair<uint16_t, uint16_t> cp;
 	std::pair<uint16_t, uint16_t> sp;
