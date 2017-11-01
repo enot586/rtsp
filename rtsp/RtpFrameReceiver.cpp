@@ -62,13 +62,14 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		header_rtp = reinterpret_cast<rtp_hdr_t*>(packet);
 		header_jpeg = reinterpret_cast<jpeghdr*>( &packet[sizeof(rtp_hdr_t)] );
 
-		header_rtp->seq = boost::endian::big_to_native(header_rtp->seq);
+		uint16_t seq = boost::endian::big_to_native( static_cast<uint16_t>(header_rtp->seq) );
 
 		offsetToJpegPayload = sizeof(rtp_hdr_t) + sizeof(jpeghdr);
 
 		//(>> 8) beacause header_jpeg->off is 24bit value and casts to uint32_t
 		offset = boost::endian::big_to_native(header_jpeg->off) >> 8;
 		std::cout << "offset:" << std::to_string(offset) << std::endl;
+		std::cout << "seq:" << std::to_string(seq) << std::endl;
 
 		if (packetCounter == 0) {
 			//search the first packet in the frame

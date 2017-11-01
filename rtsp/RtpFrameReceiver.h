@@ -10,7 +10,7 @@ class RtpFrameReceiver
 	boost::asio::ip::udp::socket& rtp_sock;
 	boost::asio::ip::udp::socket& rtcp_sock;
 
-	static const size_t MAX_PACKED_SIZE = 2 * 1024;
+	static const size_t MAX_PACKED_SIZE = 100 * 1024;
 	uint8_t packet[MAX_PACKED_SIZE];
 
 	static const size_t MAX_JPEG_SIZE = 1024 * 1024;

@@ -26,12 +26,16 @@ int main()
 		rtp.BindRtp(std::string("127.0.0.1"), rtsp.GetClientRtpPort());
 		rtp.BindRtcp(std::string("127.0.0.1"), rtsp.GetClientRtcpPort());
 
+		boost::asio::ip::udp::socket::receive_buffer_size b(50 * 1024);
+		rtp_s.set_option(b);
+
 		rtsp.Play();
 
-		
+		rtsp.Teardown();
+
 		rtp.ReceiveFrame(rtp_s);
 
-		rtsp.Teardown();
+		
 		Frame* f = rtp.GetJpeg();
 
 		f->ToFile();
