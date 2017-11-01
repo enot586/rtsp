@@ -31,12 +31,12 @@ struct jpeghdr_qtable {
 int MakeHeaders(uint8_t *p, int type, int w, int h, uint8_t *lqt,
 				uint8_t *cqt, uint16_t dri);
 
-static void MakeTables(int q, uint8_t *lqt, uint8_t *cqt);
+void MakeTables(int q, uint8_t *lqt, uint8_t *cqt);
 
-static uint8_t* MakeDRIHeader(uint8_t *p, uint16_t dri);
+uint8_t* MakeDRIHeader(uint8_t *p, uint16_t dri);
 
-static uint8_t* MakeHuffmanHeader(uint8_t *p, uint8_t *codelens, int ncodes,
+uint8_t* MakeHuffmanHeader(uint8_t *p, uint8_t *codelens, int ncodes,
 				uint8_t *symbols, int nsymbols, int tableNo,
 				int tableClass);
 
-static uint8_t* MakeQuantHeader(uint8_t *p, uint8_t *qt, int tableNo);
+uint8_t* MakeQuantHeader(uint8_t *p, uint8_t *qt, int tableNo);

@@ -5,7 +5,7 @@
 #include <vector>
 #include <boost\asio.hpp>
 #include "Rtsp.h"
-#include "RtpReceiver.h"
+#include "RtpFrameReceiver.h"
 
 boost::asio::io_service service;
 boost::asio::ip::tcp::socket rtsp_s(service);
@@ -16,7 +16,7 @@ boost::asio::ip::udp::socket rtp_s(service, endp);
 boost::asio::ip::udp::socket rtcp_s(service);
 
 Rtsp rtsp(rtsp_s);
-RtpReceiver rtp(rtp_s, rtcp_s);
+RtpFrameReceiver rtp(rtp_s, rtcp_s);
 
 int main()
 {
@@ -28,11 +28,15 @@ int main()
 
 		rtsp.Play();
 
-		rtsp.Teardown();
-
+		
 		rtp.ReceiveFrame(rtp_s);
-		//receving rtp jpeg
 
+		rtsp.Teardown();
+		Frame* f = rtp.GetJpeg();
+
+		f->ToFile();
+
+		delete f;
 		
 	}
 	catch (std::exception e) {

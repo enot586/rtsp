@@ -10,3 +10,4 @@
 /vc140.pdb
 *.Build.CppClean.log
 *.obj
+*.obj.enc
