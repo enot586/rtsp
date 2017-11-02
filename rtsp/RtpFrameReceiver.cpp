@@ -129,13 +129,10 @@ Frame* RtpFrameReceiver::GetJpeg()
 									header_jpeg->type, header_jpeg->width, header_jpeg->height,
 									Qtable, &Qtable[64], 0);
 
-	pTotalImage = new uint8_t[headerSize + jpegBodySize + 2];
+	pTotalImage = new uint8_t[headerSize + jpegBodySize];
 
 	memcpy(pTotalImage, jpeg_file_header, headerSize);
 	memcpy(&pTotalImage[headerSize], jpeg_body, jpegBodySize);
 
-	pTotalImage[jpegBodySize] = 0xFF;
-	pTotalImage[jpegBodySize+1] = 0xD9;
-
-	return new Frame(pTotalImage, headerSize + jpegBodySize + 2);
+	return new Frame(pTotalImage, headerSize + jpegBodySize);
 }
