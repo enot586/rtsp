@@ -26,8 +26,6 @@ RtpFrameReceiver rtp(rtp_s, rtcp_s);
 Mat img;
 std::vector<uint8_t> imgbuf;
 
-Frame f;
-
 bool flagStop = false;
 
 void CallBackFunc(int event, int x, int y, int flags, void* userdata)
@@ -70,9 +68,9 @@ int main()
 		{
 			rtp.ReceiveFrame(rtp_s);
 
-			rtp.GetJpeg(f);
+			rtp.GetJpeg(imgbuf);
 
-			img = imdecode( f.ToVector(), CV_LOAD_IMAGE_COLOR );
+			img = imdecode(imgbuf, CV_LOAD_IMAGE_COLOR );
 
 			imshow("cam", img);
 			cv::waitKey(5);

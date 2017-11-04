@@ -4,12 +4,11 @@
 #include <iostream>
 #include "rtp.h"
 #include <boost/endian/conversion.hpp>
-#include "Frame.h"
 #include "rtp_jpeg.h"
 
 RtpFrameReceiver::RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
 						 boost::asio::ip::udp::socket& rtcp_sock_) :
-	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), jpegBodySize(0)
+	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), jpegFileBodySize(0)
 {
 
 }
@@ -47,7 +46,8 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 
 	boost::asio::ip::udp::endpoint endp;
 
-	jpegBodySize = 0;
+	jpegFileBodySize = 0;
+	jpegFileHeaderSize = 0;
 	
 	do  {
 		try {
@@ -84,6 +84,11 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 				header_qtable->length = boost::endian::big_to_native(header_qtable->length);
 				memcpy(Qtable, &packet[offsetToJpegPayload], header_qtable->length);
 				offsetToJpegPayload += header_qtable->length;
+
+				//Generate Jpeg header
+				jpegFileHeaderSize = MakeHeaders(jpeg_body,
+										header_jpeg->type, header_jpeg->width, header_jpeg->height,
+										Qtable, &Qtable[64], 0);
 			}
 
 			currentTimestamp = boost::endian::big_to_native(header_rtp->ts);
@@ -109,8 +114,8 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 			throw std::exception("error: Overflow frame buffer");
 		}
 
-		memcpy( &jpeg_body[offset], &packet[offsetToJpegPayload], jpegPayloadSize );
-		jpegBodySize += jpegPayloadSize;
+		memcpy( &jpeg_body[jpegFileHeaderSize+offset], &packet[offsetToJpegPayload], jpegPayloadSize );
+		jpegFileBodySize += jpegPayloadSize;
 
 		isFrameReceive = ( (header_rtp->pt << 1) == 0x9A );
 	} while (!isFrameReceive);
@@ -118,36 +123,14 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 	//std::cout << "Frame complete." << std::endl;
 }
 
-Frame* RtpFrameReceiver::GetJpeg()
+void RtpFrameReceiver::GetJpeg(std::vector<uint8_t>& v)
 {
-	uint8_t* pTotalImage;
+	size_t totalJpegSize = jpegFileHeaderSize + jpegFileBodySize;
 
-	size_t headerSize = MakeHeaders(jpeg_file_header,
-									header_jpeg->type, header_jpeg->width, header_jpeg->height,
-									Qtable, &Qtable[64], 0);
+	if (v.size() < totalJpegSize)
+		v.resize(totalJpegSize);
 
-	pTotalImage = new uint8_t[headerSize + jpegBodySize];
-
-	memcpy(pTotalImage, jpeg_file_header, headerSize);
-	memcpy(&pTotalImage[headerSize], jpeg_body, jpegBodySize);
-
-	return new Frame(pTotalImage, headerSize + jpegBodySize);
+	for (size_t i = 0; i < totalJpegSize; ++i)
+		v[i] = jpeg_body[i];
 }
 
-void RtpFrameReceiver::GetJpeg(Frame& f)
-{
-	uint8_t* pTotalImage;
-
-	size_t headerSize = MakeHeaders(jpeg_file_header,
-		header_jpeg->type, header_jpeg->width, header_jpeg->height,
-		Qtable, &Qtable[64], 0);
-
-	pTotalImage = new uint8_t[headerSize + jpegBodySize];
-	
-	memcpy(pTotalImage, jpeg_file_header, headerSize);
-	memcpy(&pTotalImage[headerSize], jpeg_body, jpegBodySize);
-
-	f.SetJpeg(pTotalImage, headerSize + jpegBodySize);
-
-	delete[] pTotalImage;
-}
