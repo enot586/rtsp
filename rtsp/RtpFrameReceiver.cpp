@@ -46,14 +46,14 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 	bool isFrameReceive = false;
 
 	boost::asio::ip::udp::endpoint endp;
-
+	
 	do  {
 		try {
 			packetLength = s.receive_from(boost::asio::buffer(packet, MAX_PACKED_SIZE), endp);
-			std::cout << "[OK]" << std::endl;
+			//std::cout << "[OK]" << std::endl;
 		}
 		catch (std::exception& e) {
-			std::cout << "[FAIL]" << std::endl;
+			//std::cout << "[FAIL]" << std::endl;
 			throw e;
 		}
 
@@ -68,8 +68,8 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 
 		//(>> 8) beacause header_jpeg->off is 24bit value and casts to uint32_t
 		offset = boost::endian::big_to_native(header_jpeg->off) >> 8;
-		std::cout << "offset:" << std::to_string(offset) << std::endl;
-		std::cout << "seq:" << std::to_string(seq) << std::endl;
+		//std::cout << "offset:" << std::to_string(offset) << std::endl;
+		//std::cout << "seq:" << std::to_string(seq) << std::endl;
 
 		if (packetCounter == 0) {
 			//search the first packet in the frame
@@ -91,17 +91,17 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		else if ( currentTimestamp != boost::endian::big_to_native(header_rtp->ts) ) {
 			packetCounter = 0;
 			//Drop if this block placed in other frame
-			std::cout << "sequence dropped";
+			//std::cout << "sequence dropped";
 			continue;
 		}
 
 		//Drop if not JPEG frame
 		if ( ((header_rtp->pt << 1) != 0x1A) && ((header_rtp->pt << 1) != 0x9A)) {
-			std::cout << "NOT JPEG" << std::to_string(header_jpeg->type) <<  std::endl;
+			//std::cout << "NOT JPEG" << std::to_string(header_jpeg->type) <<  std::endl;
 			continue;
 		}
-
-		std::cout << "receive packet #" << std::to_string(++packetCounter) << std::endl;
+		++packetCounter;
+		//std::cout << "receive packet #" << std::to_string(packetCounter) << std::endl;
 		
 		jpegPayloadSize = (packetLength - offsetToJpegPayload);
 
@@ -114,7 +114,7 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		isFrameReceive = ( (header_rtp->pt << 1) == 0x9A );
 	} while (!isFrameReceive);
 
-	std::cout << "Frame complete." << std::endl;
+	//std::cout << "Frame complete." << std::endl;
 
 	jpegBodySize = offset + jpegPayloadSize;
 

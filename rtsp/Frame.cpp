@@ -18,3 +18,12 @@ void Frame::ToFile()
 
 	ofs.close();
 }
+
+
+void Frame::ToVector(std::vector<uint8_t>& v)
+{
+	v.resize(s);
+	
+	for (auto i = 0; i < s; ++i)
+		v[i] = p[i];
+}

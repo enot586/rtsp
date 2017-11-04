@@ -48,7 +48,7 @@ RtspHeader Rtsp::ReceiveHeader(boost::asio::ip::tcp::socket& s)
 
 	std::fill(responseBuffer.begin(), responseBuffer.end(), 0);
 
-	std::cout << "receive \t\t";
+	//std::cout << "receive \t\t";
 	try {
 		std::vector<char> tp(4);
 		tp[0] = '\r';
@@ -61,10 +61,10 @@ RtspHeader Rtsp::ReceiveHeader(boost::asio::ip::tcp::socket& s)
 		if (receiveBytes < responseBuffer.size())
 			responseBuffer.erase(responseBuffer.begin() + receiveBytes, responseBuffer.end());
 
-		std::cout << "[OK]" << std::endl;
+		//std::cout << "[OK]" << std::endl;
 	}
 	catch (boost::system::system_error e) {
-		std::cout << "[FAIL]" << std::endl;
+		//std::cout << "[FAIL]" << std::endl;
 		throw e;
 	}
 
@@ -95,23 +95,23 @@ void Rtsp::Connect(std::string& address)
 	
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string(address.c_str()), 554);
 	
-	std::cout << "connect \t\t";
+	//std::cout << "connect \t\t";
 	try {
 		sock.connect(ep);
-		std::cout << "[OK]" << std::endl;
+		//std::cout << "[OK]" << std::endl;
 	}
 	catch (boost::system::system_error e) {
-		std::cout << "[FAIL]" << std::endl;
+		//std::cout << "[FAIL]" << std::endl;
 		throw e;
 	}
 
-	std::cout << "send OPTIONS \t\t";
+	//std::cout << "send OPTIONS \t\t";
 	try {
 		sock.write_some(boost::asio::buffer(rtspRequest->Options()));
-		std::cout << "[OK]" << std::endl;
+		//std::cout << "[OK]" << std::endl;
 	}
 	catch (boost::system::system_error e) {
-		std::cout << "[FAIL]" << std::endl;
+		//std::cout << "[FAIL]" << std::endl;
 		throw e;
 	}
 
@@ -119,10 +119,10 @@ void Rtsp::Connect(std::string& address)
 
 	if (401 == header.GetCode()) {
 
-		std::cout << "send OPTIONS with auth \t\t";
+		//std::cout << "send OPTIONS with auth \t\t";
 		try {
 			sock.write_some(boost::asio::buffer(rtspRequest->Options(std::string("admin:admin"))));
-			std::cout << "[OK]" << std::endl;
+			//std::cout << "[OK]" << std::endl;
 
 			header = ReceiveHeader(sock);
 
@@ -131,14 +131,14 @@ void Rtsp::Connect(std::string& address)
 			}
 		}
 		catch (boost::system::system_error e) {
-			std::cout << "[FAIL]" << std::endl;
+			//std::cout << "[FAIL]" << std::endl;
 			throw e;
 		}
 
-		std::cout << "send DESCRIBE with auth \t\t";
+		//std::cout << "send DESCRIBE with auth \t\t";
 		try {
 			sock.write_some(boost::asio::buffer(rtspRequest->Describe(std::string("admin:admin"))));
-			std::cout << "[OK]" << std::endl;
+			//std::cout << "[OK]" << std::endl;
 
 			header = ReceiveHeader(sock);
 
@@ -156,14 +156,14 @@ void Rtsp::Connect(std::string& address)
 			addr = GetSdpAttributeValue("control", sdp_description);
 		}
 		catch (boost::system::system_error e) {
-			std::cout << "[FAIL]" << std::endl;
+			//std::cout << "[FAIL]" << std::endl;
 			throw e;
 		}
 
-		std::cout << "send SETUP with auth \t\t";
+		//std::cout << "send SETUP with auth \t\t";
 		try {
 			sock.write_some(boost::asio::buffer(rtspRequest->Setup(std::string("admin:admin"), addr, cp.first, cp.second)));
-			std::cout << "[OK]" << std::endl;
+			//std::cout << "[OK]" << std::endl;
 
 			header = ReceiveHeader(sock);
 
@@ -175,7 +175,7 @@ void Rtsp::Connect(std::string& address)
 			sessionId = header.GetSessionId();
 		}
 		catch (boost::system::system_error e) {
-			std::cout << "[FAIL]" << std::endl;
+			//std::cout << "[FAIL]" << std::endl;
 			throw e;
 		}
 	}
@@ -186,10 +186,10 @@ void Rtsp::Connect(std::string& address)
 }
 void Rtsp::Play()
 {
-	std::cout << "send PLAY with auth \t\t";
+	//std::cout << "send PLAY with auth \t\t";
 	try {
 		sock.write_some(boost::asio::buffer(rtspRequest->Play(std::string("admin:admin"), sessionId)));
-		std::cout << "[OK]" << std::endl;
+		//std::cout << "[OK]" << std::endl;
 
 		RtspHeader header = ReceiveHeader(sock);
 
@@ -198,17 +198,17 @@ void Rtsp::Play()
 		}
 	}
 	catch (boost::system::system_error e) {
-		std::cout << "[FAIL]" << std::endl;
+		//std::cout << "[FAIL]" << std::endl;
 		throw e;
 	}
 }
 
 void Rtsp::Teardown()
 {
-	std::cout << "send TEARDOWN with auth \t\t";
+	//std::cout << "send TEARDOWN with auth \t\t";
 	try {
 		sock.write_some(boost::asio::buffer(rtspRequest->Teardown(std::string("admin:admin"), sessionId)));
-		std::cout << "[OK]" << std::endl;
+		//std::cout << "[OK]" << std::endl;
 
 		RtspHeader header = ReceiveHeader(sock);
 
@@ -217,7 +217,7 @@ void Rtsp::Teardown()
 		}
 	}
 	catch (boost::system::system_error e) {
-		std::cout << "[FAIL]" << std::endl;
+		//std::cout << "[FAIL]" << std::endl;
 		throw e;
 	}
 }
