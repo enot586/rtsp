@@ -14,11 +14,9 @@ using namespace cv;
 using namespace std;
 
 boost::asio::io_service service;
+
 boost::asio::ip::tcp::socket rtsp_s(service);
-
-boost::asio::ip::udp::endpoint endp(boost::asio::ip::udp::v4(), 55780);
-boost::asio::ip::udp::socket rtp_s(service, endp);
-
+boost::asio::ip::udp::socket rtp_s(service);
 boost::asio::ip::udp::socket rtcp_s(service);
 
 Rtsp rtsp(rtsp_s);
@@ -56,11 +54,8 @@ int main()
 	try {
 		rtsp.Connect( std::string("192.168.0.102") );
 		
-		rtp.BindRtp(std::string("127.0.0.1"), rtsp.GetClientRtpPort());
-		rtp.BindRtcp(std::string("127.0.0.1"), rtsp.GetClientRtcpPort());
-
-		boost::asio::ip::udp::socket::receive_buffer_size b(50 * 1024);
-		rtp_s.set_option(b);
+		rtp.BindRtp( rtsp.GetClientRtpPort() );
+		rtp.BindRtcp( rtsp.GetClientRtcpPort() );
 
 		rtsp.Play();
 					

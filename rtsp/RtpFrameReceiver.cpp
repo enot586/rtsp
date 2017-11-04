@@ -7,9 +7,12 @@
 #include "rtp_jpeg.h"
 
 RtpFrameReceiver::RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
-						 boost::asio::ip::udp::socket& rtcp_sock_) :
-	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), jpegFileBodySize(0)
+									boost::asio::ip::udp::socket& rtcp_sock_) :
+	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), 
+	header_rtp(nullptr), header_jpeg(nullptr), header_qtable(nullptr),
+	jpegFileHeaderSize(0), jpegFileBodySize(0)
 {
+
 
 }
 
@@ -19,18 +22,21 @@ RtpFrameReceiver::~RtpFrameReceiver()
 }
 
 
-void RtpFrameReceiver::BindRtp(std::string& ip, uint16_t port)
+void RtpFrameReceiver::BindRtp(uint16_t port)
 {
-	//boost::asio::ip::udp::endpoint rtp_ep(boost::asio::ip::address::from_string(ip), port);
-	//rtp_sock.open(boost::asio::ip::udp::v4());
-	//rtp_sock.bind(rtp_ep);
+	boost::asio::ip::udp::endpoint rtp_ep(boost::asio::ip::udp::v4(), port);
+	rtp_sock.open(boost::asio::ip::udp::v4());
+	rtp_sock.bind(rtp_ep);
+
+	boost::asio::ip::udp::socket::receive_buffer_size b(50 * 1024);
+	rtp_sock.set_option(b);
 }
 
-void RtpFrameReceiver::BindRtcp(std::string& ip, uint16_t port)
+void RtpFrameReceiver::BindRtcp( uint16_t port)
 {
-	//boost::asio::ip::udp::endpoint rtcp_ep(boost::asio::ip::address::from_string(ip), port);
-	//rtcp_sock.open(boost::asio::ip::udp::v4());
-	//rtcp_sock.bind(rtcp_ep);
+	boost::asio::ip::udp::endpoint rtcp_ep(boost::asio::ip::udp::v4(), port);
+	rtcp_sock.open(boost::asio::ip::udp::v4());
+	rtcp_sock.bind(rtcp_ep);
 }
 
 void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)

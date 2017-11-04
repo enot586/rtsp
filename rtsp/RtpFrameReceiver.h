@@ -30,8 +30,8 @@ public:
 						boost::asio::ip::udp::socket& rtcp_sock_);
 	~RtpFrameReceiver();
 
-	void BindRtp(std::string& ip, uint16_t port);
-	void BindRtcp(std::string& ip, uint16_t port);
+	void BindRtp(uint16_t port);
+	void BindRtcp(uint16_t port);
 
 	void ReceiveFrame(boost::asio::ip::udp::socket& s);
 	void GetJpeg(std::vector<uint8_t>& v);
