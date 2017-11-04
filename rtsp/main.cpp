@@ -26,7 +26,7 @@ RtpFrameReceiver rtp(rtp_s, rtcp_s);
 Mat img;
 std::vector<uint8_t> imgbuf;
 
-std::unique_ptr<Frame> f;
+Frame f;
 
 bool flagStop = false;
 
@@ -52,9 +52,8 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 
 int main()
 {
-	//namedWindow("cam", CV_WINDOW_AUTOSIZE);
-
-	//setMouseCallback("cam", CallBackFunc, NULL);
+	namedWindow("cam", CV_WINDOW_AUTOSIZE);
+	setMouseCallback("cam", CallBackFunc, NULL);
 
 	try {
 		rtsp.Connect( std::string("192.168.0.102") );
@@ -66,21 +65,18 @@ int main()
 		rtp_s.set_option(b);
 
 		rtsp.Play();
-		
-			
+					
 		do
 		{
 			rtp.ReceiveFrame(rtp_s);
 
-			f.reset(rtp.GetJpeg());
+			rtp.GetJpeg(f);
 
-			f->ToVector(imgbuf);
-
-			img = imdecode(imgbuf, CV_LOAD_IMAGE_COLOR);
+			img = imdecode( f.ToVector(), CV_LOAD_IMAGE_COLOR );
 
 			imshow("cam", img);
-		} while ((-1) == cv::waitKey(10));
-		//f->ToFile();
+			cv::waitKey(5);
+		} while ( !flagStop );
 		
 		rtsp.Teardown();
 	}

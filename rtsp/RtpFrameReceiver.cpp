@@ -9,7 +9,7 @@
 
 RtpFrameReceiver::RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
 						 boost::asio::ip::udp::socket& rtcp_sock_) :
-	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_)
+	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), jpegBodySize(0)
 {
 
 }
@@ -34,7 +34,7 @@ void RtpFrameReceiver::BindRtcp(std::string& ip, uint16_t port)
 	//rtcp_sock.bind(rtcp_ep);
 }
 
-uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
+void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 {
 	size_t packetCounter = 0;
 	size_t packetLength = 0;
@@ -46,6 +46,8 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 	bool isFrameReceive = false;
 
 	boost::asio::ip::udp::endpoint endp;
+
+	jpegBodySize = 0;
 	
 	do  {
 		try {
@@ -56,8 +58,6 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 			//std::cout << "[FAIL]" << std::endl;
 			throw e;
 		}
-
-		s.get_io_service().run();
 
 		header_rtp = reinterpret_cast<rtp_hdr_t*>(packet);
 		header_jpeg = reinterpret_cast<jpeghdr*>( &packet[sizeof(rtp_hdr_t)] );
@@ -110,15 +110,12 @@ uint32_t RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		}
 
 		memcpy( &jpeg_body[offset], &packet[offsetToJpegPayload], jpegPayloadSize );
+		jpegBodySize += jpegPayloadSize;
 
 		isFrameReceive = ( (header_rtp->pt << 1) == 0x9A );
 	} while (!isFrameReceive);
 
 	//std::cout << "Frame complete." << std::endl;
-
-	jpegBodySize = offset + jpegPayloadSize;
-
-	return jpegBodySize;
 }
 
 Frame* RtpFrameReceiver::GetJpeg()
@@ -135,4 +132,22 @@ Frame* RtpFrameReceiver::GetJpeg()
 	memcpy(&pTotalImage[headerSize], jpeg_body, jpegBodySize);
 
 	return new Frame(pTotalImage, headerSize + jpegBodySize);
+}
+
+void RtpFrameReceiver::GetJpeg(Frame& f)
+{
+	uint8_t* pTotalImage;
+
+	size_t headerSize = MakeHeaders(jpeg_file_header,
+		header_jpeg->type, header_jpeg->width, header_jpeg->height,
+		Qtable, &Qtable[64], 0);
+
+	pTotalImage = new uint8_t[headerSize + jpegBodySize];
+	
+	memcpy(pTotalImage, jpeg_file_header, headerSize);
+	memcpy(&pTotalImage[headerSize], jpeg_body, jpegBodySize);
+
+	f.SetJpeg(pTotalImage, headerSize + jpegBodySize);
+
+	delete[] pTotalImage;
 }

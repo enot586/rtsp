@@ -36,8 +36,8 @@ public:
 	void BindRtp(std::string& ip, uint16_t port);
 	void BindRtcp(std::string& ip, uint16_t port);
 
-//private:
-	uint32_t ReceiveFrame(boost::asio::ip::udp::socket& s);
+	void ReceiveFrame(boost::asio::ip::udp::socket& s);
 	Frame* GetJpeg();
+	void GetJpeg(Frame& f);
 };
 
