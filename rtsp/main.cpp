@@ -1,14 +1,8 @@
 #include "stdafx.h"
-#include <string>
-#include <algorithm>  
-#include <iostream>
-#include <vector>
 
 #include "Rtsp.h"
 #include "RtpFrameReceiver.h"
-
-#include <thread>         // std::this_thread::sleep_for
-#include <chrono>         // std::chrono::seconds
+#include "RtcpBuilder.h"
 
 using namespace cv;
 using namespace std;
@@ -21,6 +15,8 @@ boost::asio::ip::udp::socket rtcp_s(service);
 
 Rtsp rtsp(rtsp_s);
 RtpFrameReceiver rtp(rtp_s, rtcp_s);
+RtcpBuilder rtcp;
+
 Mat img;
 std::vector<uint8_t> imgbuf;
 
@@ -58,10 +54,13 @@ int main()
 		rtp.BindRtcp( rtsp.GetClientRtcpPort() );
 
 		rtsp.Play();
-					
+				
+		std::chrono::system_clock::time_point receiveTimestamp;
+
 		do
 		{
 			rtp.ReceiveFrame(rtp_s);
+			receiveTimestamp = std::chrono::system_clock::now();
 
 			rtp.GetJpeg(imgbuf);
 

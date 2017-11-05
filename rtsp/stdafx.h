@@ -10,6 +10,14 @@
 #include <stdio.h>
 #include <tchar.h>
 
+#include <thread>
+#include <chrono>   
+
+#include <string>
+#include <algorithm>  
+#include <iostream>
+#include <vector>
+
 #include "base64.h"
 
 #include <boost\asio.hpp>
