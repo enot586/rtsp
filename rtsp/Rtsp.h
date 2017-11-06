@@ -17,8 +17,8 @@ class Rtsp
 	static const uint16_t RTP_PORT_DEFAULT = 55780;
 	static const uint16_t RTCP_PORT_DEFAULT = 55781;
 
-	std::pair<uint16_t, uint16_t> cp;
-	std::pair<uint16_t, uint16_t> sp;
+	std::pair<uint16_t, uint16_t> clientPorts;
+	std::pair<uint16_t, uint16_t> cameraPorts;
 
 	std::string addr;
 	std::string sessionId;
@@ -35,22 +35,22 @@ public:
 
 	uint16_t Rtsp::GetClientRtpPort()
 	{
-		return cp.first;
+		return clientPorts.first;
 	}
 
 	uint16_t Rtsp::GetClientRtcpPort()
 	{
-		return cp.second;
+		return clientPorts.second;
 	}
 
-	uint16_t Rtsp::GetServerRtpPort()
+	uint16_t Rtsp::GetCameraRtpPort()
 	{
-		return sp.first;
+		return cameraPorts.first;
 	}
 
-	uint16_t Rtsp::GetServerRtcpPort()
+	uint16_t Rtsp::GetCameraRtcpPort()
 	{
-		return sp.second;
+		return cameraPorts.second;
 	}
 private:
 	uint32_t ReceiveUntil(boost::asio::ip::tcp::socket& s, std::vector<char>& tp, std::vector<char>& responseBuffer);

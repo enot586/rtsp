@@ -7,12 +7,12 @@
 #include "rtp_jpeg.h"
 
 RtpFrameReceiver::RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
-									boost::asio::ip::udp::socket& rtcp_sock_) :
-	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), 
+									boost::asio::ip::udp::socket& rtcp_sock_, RtcpBuilder& rtcp_) :
+	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), rtcp(rtcp_),
 	header_rtp(nullptr), header_jpeg(nullptr), header_qtable(nullptr),
-	jpegFileHeaderSize(0), jpegFileBodySize(0)
+	jpegFileHeaderSize(0), jpegFileBodySize(0), initTime(std::chrono::system_clock::now())
 {
-
+	//initTime = std::chrono::system_clock::now();
 
 }
 
@@ -54,10 +54,13 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 
 	jpegFileBodySize = 0;
 	jpegFileHeaderSize = 0;
+
+	std::chrono::system_clock::time_point receiveTimestamp;
 	
 	do  {
 		try {
 			packetLength = s.receive_from(boost::asio::buffer(packet, MAX_PACKED_SIZE), endp);
+			receiveTimestamp = std::chrono::system_clock::now();
 			//std::cout << "[OK]" << std::endl;
 		}
 		catch (std::exception& e) {
@@ -93,8 +96,8 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 
 				//Generate Jpeg header
 				jpegFileHeaderSize = MakeHeaders(jpeg_body,
-										header_jpeg->type, header_jpeg->width, header_jpeg->height,
-										Qtable, &Qtable[64], 0);
+												 header_jpeg->type, header_jpeg->width, header_jpeg->height,
+												 Qtable, &Qtable[64], 0);
 			}
 
 			currentTimestamp = boost::endian::big_to_native(header_rtp->ts);
@@ -105,12 +108,19 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 			//std::cout << "sequence dropped";
 			continue;
 		}
-
+		
 		//Drop if not JPEG frame
-		if ( ((header_rtp->pt << 1) != 0x1A) && ((header_rtp->pt << 1) != 0x9A)) {
+		if ( ((header_rtp->pt << 1) != 0x1A) && ((header_rtp->pt << 1) != 0x9A) ) {
 			//std::cout << "NOT JPEG" << std::to_string(header_jpeg->type) <<  std::endl;
 			continue;
 		}
+
+		std::chrono::milliseconds ms =
+			std::chrono::duration_cast<std::chrono::milliseconds>(receiveTimestamp - initTime);
+
+		rtcp.UpdateSeq(header_rtp->seq);
+		rtcp.UpdateJitter( header_rtp->ts, static_cast<uint32_t>(ms.count())*90 ); // (*90) - transform milliseconds to 90000Hz intervals
+
 		++packetCounter;
 		//std::cout << "receive packet #" << std::to_string(packetCounter) << std::endl;
 		

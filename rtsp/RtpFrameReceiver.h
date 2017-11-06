@@ -3,11 +3,14 @@
 #include "rtp.h"
 #include "rtp_jpeg.h"
 #include <memory>
+#include "RtcpBuilder.h"
 
 class RtpFrameReceiver
 {
 	boost::asio::ip::udp::socket& rtp_sock;
 	boost::asio::ip::udp::socket& rtcp_sock;
+
+	RtcpBuilder& rtcp;
 
 	static const size_t MAX_PACKED_SIZE = 100 * 1024;
 	uint8_t packet[MAX_PACKED_SIZE];
@@ -25,9 +28,11 @@ class RtpFrameReceiver
 	size_t jpegFileHeaderSize;
 	size_t jpegFileBodySize;
 
+	std::chrono::system_clock::time_point initTime;
+
 public:
 	RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
-						boost::asio::ip::udp::socket& rtcp_sock_);
+						boost::asio::ip::udp::socket& rtcp_sock_, RtcpBuilder& rtcp_);
 	~RtpFrameReceiver();
 
 	void BindRtp(uint16_t port);

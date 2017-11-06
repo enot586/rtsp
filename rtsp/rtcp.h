@@ -25,10 +25,10 @@ typedef enum {
 * RTCP common header word
 */
 typedef struct {
-	uint32_t version : 2;   /* protocol version */
-	uint32_t p : 1;         /* padding flag */
-	uint32_t count : 5;     /* varies by packet type */
-	uint32_t pt : 8;        /* RTCP packet type */
+	uint16_t count : 5;     /* varies by packet type */
+	uint16_t p : 1;         /* padding flag */
+	uint16_t version : 2;   /* protocol version */
+	uint16_t pt : 8;        /* RTCP packet type */
 	uint16_t length;        /* pkt len in words, w/o this word */
 } rtcp_common_t;
 

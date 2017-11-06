@@ -2,7 +2,7 @@
 #include "Rtsp.h"
 
 Rtsp::Rtsp(boost::asio::ip::tcp::socket& sock_) :
-	sock(sock_), cp(RTP_PORT_DEFAULT, RTCP_PORT_DEFAULT), sp(0, 0)
+	sock(sock_), clientPorts(RTP_PORT_DEFAULT, RTCP_PORT_DEFAULT), cameraPorts(0, 0)
 {
 }
 
@@ -162,7 +162,7 @@ void Rtsp::Connect(std::string& address)
 
 		//std::cout << "send SETUP with auth \t\t";
 		try {
-			sock.write_some(boost::asio::buffer(rtspRequest->Setup(std::string("admin:admin"), addr, cp.first, cp.second)));
+			sock.write_some(boost::asio::buffer(rtspRequest->Setup(std::string("admin:admin"), addr, clientPorts.first, clientPorts.second)));
 			//std::cout << "[OK]" << std::endl;
 
 			header = ReceiveHeader(sock);
@@ -171,7 +171,7 @@ void Rtsp::Connect(std::string& address)
 				throw std::exception(std::string("error: " + std::to_string(header.GetCode())).c_str());
 			}
 
-			sp = header.GetTransportServerPorts();
+			cameraPorts = header.GetTransportCameraPorts();
 			sessionId = header.GetSessionId();
 		}
 		catch (boost::system::system_error e) {
@@ -184,6 +184,7 @@ void Rtsp::Connect(std::string& address)
 		throw std::exception("supports only authorized access");
 	}
 }
+
 void Rtsp::Play()
 {
 	//std::cout << "send PLAY with auth \t\t";

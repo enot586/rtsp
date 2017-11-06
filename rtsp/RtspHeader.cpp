@@ -102,7 +102,7 @@ std::string RtspHeader::GetTransport()
 	return GetParamSring( std::string("Transport") );
 }
 
-std::pair<uint16_t, uint16_t> RtspHeader::GetTransportServerPorts()
+std::pair<uint16_t, uint16_t> RtspHeader::GetTransportCameraPorts()
 {
 	std::string first;
 	std::string second;

@@ -10,9 +10,12 @@ class RtcpBuilder
 
 	uint32_t Dold;
 	uint32_t jitter;
+
 public:
 	RtcpBuilder();
 	~RtcpBuilder();
+
+	void ClearData();
 
 	void InitSeq(uint16_t seq);
 	void UpdateSeq(uint16_t seq);
@@ -20,6 +23,6 @@ public:
 
 	void UpdateJitter(uint32_t packetTimestamp, uint32_t receiveTimestamp);
 
-	void BuildRR(uint8_t* buffer, size_t size);
+	size_t BuildRR(uint8_t* buffer, size_t size);
 };
 
