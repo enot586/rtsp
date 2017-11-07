@@ -15,6 +15,7 @@ public:
 	RtcpBuilder();
 	~RtcpBuilder();
 
+	void SetCamSsrc(uint32_t ssrc);
 	void ClearData();
 
 	void InitSeq(uint16_t seq);

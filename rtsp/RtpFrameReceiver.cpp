@@ -91,6 +91,10 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 				offsetToJpegPayload += sizeof(jpeghdr_qtable);
 
 				header_qtable->length = boost::endian::big_to_native(header_qtable->length);
+
+				if (header_qtable->length > 128)
+					continue;
+
 				memcpy(Qtable, &packet[offsetToJpegPayload], header_qtable->length);
 				offsetToJpegPayload += header_qtable->length;
 
@@ -150,3 +154,7 @@ void RtpFrameReceiver::GetJpeg(std::vector<uint8_t>& v)
 		v[i] = jpeg_body[i];
 }
 
+uint32_t RtpFrameReceiver::GetSsrc()
+{
+	return boost::endian::big_to_native(header_rtp->ssrc);
+}

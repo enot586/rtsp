@@ -77,6 +77,8 @@ int main()
 
 				boost::asio::ip::udp::socket rtcp_s(service);
 
+				rtcp.SetCamSsrc( rtp.GetSsrc() );
+
 				uint8_t packet_buffer[512];
 				size_t packetSize = rtcp.BuildRR(packet_buffer, sizeof(packet_buffer) );
 				

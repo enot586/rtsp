@@ -40,5 +40,7 @@ public:
 
 	void ReceiveFrame(boost::asio::ip::udp::socket& s);
 	void GetJpeg(std::vector<uint8_t>& v);
+
+	uint32_t RtpFrameReceiver::GetSsrc();
 };
 

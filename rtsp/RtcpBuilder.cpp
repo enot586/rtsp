@@ -50,6 +50,11 @@ size_t RtcpBuilder::BuildRR(uint8_t* buffer, size_t size)
 	return 0;
 }
 
+void RtcpBuilder::SetCamSsrc(uint32_t ssrc)
+{
+	packet.r.rr.rr[0].ssrc = boost::endian::native_to_big(ssrc);
+}
+
 void RtcpBuilder::ClearData()
 {
 	size_t packetSize = sizeof(packet.common) + sizeof(packet.r.rr);
