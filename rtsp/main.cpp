@@ -35,18 +35,6 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 	{
 		flagStop = true;
 	}
-	//else if (event == EVENT_RBUTTONDOWN)
-	//{
-	//	cout << "Right button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-	//}
-	//else if (event == EVENT_MBUTTONDOWN)
-	//{
-	//	cout << "Middle button of the mouse is clicked - position (" << x << ", " << y << ")" << endl;
-	//}
-	//else if (event == EVENT_MOUSEMOVE)
-	//{
-	//	cout << "Mouse move over the window - position (" << x << ", " << y << ")" << endl;
-	//}
 }
 
 
@@ -60,12 +48,13 @@ void Receiver()
 		Mat img;
 
 		while (!flagStop) {
-			//std::lock(rtp_socket);
 			rtp.ReceiveFrame(rtp_s);
 			rtp.GetJpeg(imgbuf);
+			
 			img = imdecode(imgbuf, CV_LOAD_IMAGE_COLOR);
-			frames.push(img);
-			//rtp_socket.unlock();
+			if (img.data != NULL) {
+				frames.push(img);
+			}
 
 			if ( (frames.size() > 1) && !rtcp.GetCamSsrc() ) {
 				rtcp.SetCamSsrc( rtp.GetSsrc() );

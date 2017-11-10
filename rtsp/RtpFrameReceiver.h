@@ -28,6 +28,8 @@ class RtpFrameReceiver
 	size_t jpegFileHeaderSize;
 	size_t jpegFileBodySize;
 
+	uint16_t firstPacketInFrame;
+	uint16_t lastPacketInFrame;
 	std::chrono::system_clock::time_point initTime;
 
 public:

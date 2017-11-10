@@ -2,6 +2,7 @@
 #include "RtpFrameReceiver.h"
 #include <algorithm>  
 #include <iostream>
+#include <limits>
 #include "rtp.h"
 #include <boost/endian/conversion.hpp>
 #include "rtp_jpeg.h"
@@ -13,7 +14,7 @@ RtpFrameReceiver::RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
 	jpegFileHeaderSize(0), jpegFileBodySize(0), initTime(std::chrono::system_clock::now())
 {
 	//initTime = std::chrono::system_clock::now();
-
+	
 }
 
 
@@ -71,8 +72,6 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		header_rtp = reinterpret_cast<rtp_hdr_t*>(packet);
 		header_jpeg = reinterpret_cast<jpeghdr*>( &packet[sizeof(rtp_hdr_t)] );
 
-		uint16_t seq = boost::endian::big_to_native( static_cast<uint16_t>(header_rtp->seq) );
-
 		offsetToJpegPayload = sizeof(rtp_hdr_t) + sizeof(jpeghdr);
 
 		//(>> 8) beacause header_jpeg->off is 24bit value and casts to uint32_t
@@ -81,6 +80,8 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		//std::cout << "seq:" << std::to_string(seq) << std::endl;
 
 		if (packetCounter == 0) {
+			isFrameReceive = false;
+
 			//search the first packet in the frame
 			if (header_jpeg->off != 0)
 				continue;
@@ -97,12 +98,14 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 
 				memcpy(Qtable, &packet[offsetToJpegPayload], header_qtable->length);
 				offsetToJpegPayload += header_qtable->length;
-
-				//Generate Jpeg header
-				jpegFileHeaderSize = MakeHeaders(jpeg_body,
-												 header_jpeg->type, header_jpeg->width, header_jpeg->height,
-												 Qtable, &Qtable[64], 0);
 			}
+
+			firstPacketInFrame = boost::endian::big_to_native( static_cast<uint16_t>(header_rtp->seq) );
+
+			//Generate Jpeg header
+			jpegFileHeaderSize = MakeHeaders(jpeg_body,
+												header_jpeg->type, header_jpeg->width, header_jpeg->height,
+												Qtable, &Qtable[64], 0);
 
 			currentTimestamp = boost::endian::big_to_native(header_rtp->ts);
 		}
@@ -137,7 +140,25 @@ void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)
 		memcpy( &jpeg_body[jpegFileHeaderSize+offset], &packet[offsetToJpegPayload], jpegPayloadSize );
 		jpegFileBodySize += jpegPayloadSize;
 
-		isFrameReceive = ( (header_rtp->pt << 1) == 0x9A );
+		//Check EOF marker and test for correct packet numbers
+		if ( (header_rtp->pt << 1) == 0x9A ) {
+			lastPacketInFrame = boost::endian::big_to_native( static_cast<uint16_t>(header_rtp->seq) );
+
+			uint16_t totalPackets = 0;
+
+			if (lastPacketInFrame >= firstPacketInFrame)
+			{
+				totalPackets = (lastPacketInFrame - firstPacketInFrame) + 1;
+			}
+			else
+			{
+				totalPackets = ((std::numeric_limits<uint16_t>::max() - firstPacketInFrame) + 1) + lastPacketInFrame;
+			}
+			 
+			isFrameReceive = (totalPackets == packetCounter);
+			packetCounter = 0;
+		}
+
 	} while (!isFrameReceive);
 
 	//std::cout << "Frame complete." << std::endl;
