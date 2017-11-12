@@ -8,8 +8,8 @@
 #include "rtp_jpeg.h"
 
 RtpFrameReceiver::RtpFrameReceiver(boost::asio::ip::udp::socket& rtp_sock_,
-									boost::asio::ip::udp::socket& rtcp_sock_, RtcpBuilder& rtcp_) :
-	rtp_sock(rtp_sock_), rtcp_sock(rtcp_sock_), rtcp(rtcp_),
+									RtcpBuilder& rtcp_) :
+	rtp_sock(rtp_sock_), rtcp(rtcp_),
 	header_rtp(nullptr), header_jpeg(nullptr), header_qtable(nullptr),
 	jpegFileHeaderSize(0), jpegFileBodySize(0), initTime(std::chrono::system_clock::now())
 {
@@ -31,13 +31,6 @@ void RtpFrameReceiver::BindRtp(uint16_t port)
 
 	boost::asio::ip::udp::socket::receive_buffer_size b(50 * 1024);
 	rtp_sock.set_option(b);
-}
-
-void RtpFrameReceiver::BindRtcp( uint16_t port)
-{
-	boost::asio::ip::udp::endpoint rtcp_ep(boost::asio::ip::udp::v4(), port);
-	rtcp_sock.open(boost::asio::ip::udp::v4());
-	rtcp_sock.bind(rtcp_ep);
 }
 
 void RtpFrameReceiver::ReceiveFrame(boost::asio::ip::udp::socket& s)

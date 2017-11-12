@@ -14,7 +14,7 @@ using namespace boost::asio;
 
 class IpCam
 {
-	static const uint8_t MAX_QUEUE_LENGTH = 50;
+	static const uint8_t MAX_QUEUE_LENGTH = 200;
 
 	io_service& service;
 
@@ -22,7 +22,6 @@ class IpCam
 
 	ip::tcp::socket rtsp_s;
 	ip::udp::socket rtp_s;
-	ip::udp::socket rtcp_s;
 
 	RtcpBuilder rtcp;
 	Rtsp rtsp;

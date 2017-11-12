@@ -12,10 +12,9 @@ IpCam::IpCam(io_service& service_) :
 	service(service_),
 	rtsp_s(service_),
 	rtp_s(service_),
-	rtcp_s(service_),
 
 	rtsp(rtsp_s),
-	rtp(rtp_s, rtcp_s, rtcp),
+	rtp(rtp_s, rtcp),
 	receiver(nullptr),
 	rtcpHandler(nullptr),
 
@@ -67,24 +66,29 @@ void IpCam::Receiver()
 
 void IpCam::RtcpHandler()
 {
-	do
-	{
-		ip::udp::endpoint rtcp_ep( ip::address::from_string(cam),
-								   rtsp.GetCameraRtcpPort() );
+	try {
+		do
+		{
+			ip::udp::endpoint rtcp_ep( ip::address::from_string(cam),
+									   rtsp.GetCameraRtcpPort() );
 
-		ip::udp::socket rtcp_s(service);
+			ip::udp::socket rtcp_s(service);
 
-		uint8_t packet_buffer[128];
-		size_t packetSize = rtcp.BuildRR( packet_buffer, sizeof(packet_buffer) );
+			uint8_t packet_buffer[128];
+			size_t packetSize = rtcp.BuildRR( packet_buffer, sizeof(packet_buffer) );
 
-		rtcp_s.open( ip::udp::v4() );
+			rtcp_s.open( ip::udp::v4() );
 
-		if ( !( packetSize == rtcp_s.send_to( buffer(packet_buffer, packetSize), rtcp_ep) ) ) {
-			std::cout << "RR FAIL" << std::endl;
-		}
+			if ( !(packetSize == rtcp_s.send_to( buffer(packet_buffer, packetSize), rtcp_ep ) ) ) {
+				std::cout << "RR FAIL" << std::endl;
+			}
 
-		std::this_thread::sleep_for( std::chrono::seconds(10) );
-	} while (!flagStop);
+			std::this_thread::sleep_for( std::chrono::seconds(10) );
+		} while (!flagStop);
+	}
+	catch (std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
 }
 
 void IpCam::Connect(std::string& address)
@@ -116,15 +120,30 @@ void IpCam::Disconnect()
 	catch (std::exception& e) {
 		std::cout << e.what() << std::endl;
 	}
-	
+
 	flagStop = true;
 
-	rtp_s.close();
-	rtsp_s.close();
-	rtcp_s.close();
+	try {
+		rtp_s.close();
+	}
+	catch (std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
 
-	if (receiver.get() != nullptr) receiver->join();
-	if (rtcpHandler.get() != nullptr) rtcpHandler->join();
+	try {
+		rtsp_s.close();
+	}
+	catch (std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
+
+	try {
+		if (receiver.get() != nullptr) receiver->join();
+		if (rtcpHandler.get() != nullptr) rtcpHandler->join();
+	}
+	catch (std::exception& e) {
+		std::cout << e.what() << std::endl;
+	}
 }
 
 void IpCam::GetFrame(cv::Mat& s)
