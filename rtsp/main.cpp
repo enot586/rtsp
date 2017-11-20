@@ -24,23 +24,36 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 
 io_service service;
 IpCam camera(service);
-Mat img;
+Mat img1;
+Mat img2;
+Mat result;
 
 int main()
 {
 	namedWindow("cam", CV_WINDOW_AUTOSIZE);
 	setMouseCallback("cam", CallBackFunc, NULL);
 
+	namedWindow("1oo", CV_WINDOW_AUTOSIZE);
+	namedWindow("2oo", CV_WINDOW_AUTOSIZE);
+	
 	try {
 	
 		camera.Connect( std::string("192.168.0.102") );
 		
-		do
-		{
-			camera.GetFrame(img);
+		do {
+			if (camera.GetFramesNo() < 2)
+				continue;
 
-			if (img.data != NULL)
-				imshow("cam", img);
+			camera.GetFrame(img1);
+			camera.GetFrame(img2);
+
+			if ( (img1.data != NULL) && (img2.data != NULL) ) {
+				result = img2 - img1;
+
+				imshow("1oo", img1);
+				imshow("2oo", img2);
+				imshow("cam", result);
+			}
 
 			cv::waitKey(1);
 		} while ( !flagStop );

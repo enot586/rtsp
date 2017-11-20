@@ -40,7 +40,8 @@ public:
 	void Connect(std::string& address);
 	void Disconnect();
 
-	void GetFrame(cv::Mat& s);
+	size_t GetFramesNo();
+	bool GetFrame(cv::Mat& s);
 	
 private:
 	void RtcpHandler();

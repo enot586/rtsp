@@ -146,11 +146,17 @@ void IpCam::Disconnect()
 	}
 }
 
-void IpCam::GetFrame(cv::Mat& s)
+bool IpCam::GetFrame(cv::Mat& s)
 {
 	if ( frames.empty() )
-		return;
+		return false;
 
 	s = frames.front();
 	frames.pop();
+
+	return true;
+}
+
+size_t IpCam::GetFramesNo() {
+	return frames.size();
 }
