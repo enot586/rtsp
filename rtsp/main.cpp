@@ -25,8 +25,9 @@ void CallBackFunc(int event, int x, int y, int flags, void* userdata)
 io_service service;
 IpCam camera(service);
 Mat img1;
-Mat img2;
-Mat result;
+Mat frame;
+Mat fgMaskMOG;
+Ptr<BackgroundSubtractor> pMOG;
 
 int main()
 {
@@ -34,26 +35,34 @@ int main()
 	setMouseCallback("cam", CallBackFunc, NULL);
 
 	namedWindow("1oo", CV_WINDOW_AUTOSIZE);
-	namedWindow("2oo", CV_WINDOW_AUTOSIZE);
 	
+	pMOG = cv::createBackgroundSubtractorMOG2();
+
 	try {
 	
 		camera.Connect( std::string("192.168.0.102") );
 		
 		do {
-			if (camera.GetFramesNo() < 2)
+			if ( !camera.GetFramesNo() )
 				continue;
 
 			camera.GetFrame(img1);
-			camera.GetFrame(img2);
 
-			if ( (img1.data != NULL) && (img2.data != NULL) ) {
-				result = img2 - img1;
+			pMOG->apply(img1, fgMaskMOG);
 
-				imshow("1oo", img1);
-				imshow("2oo", img2);
-				imshow("cam", result);
+			// find the contours
+			vector< vector<Point> > contours;
+			findContours(fgMaskMOG, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE);
+
+			for (auto it = contours.begin(); it != contours.end(); ++it) {
+				if (contourArea(*it) > 20) {
+					CvRect rect = boundingRect( *it );
+					rectangle( img1, rect, Scalar(0, 0, 255) );
+				}
 			}
+
+			imshow("1oo", img1);
+			imshow("cam", fgMaskMOG);
 
 			cv::waitKey(1);
 		} while ( !flagStop );
@@ -66,4 +75,3 @@ int main()
 
     return 0;
 }
-
